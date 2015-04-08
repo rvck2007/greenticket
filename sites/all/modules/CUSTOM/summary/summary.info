@@ -1,0 +1,7 @@
+; $Id:
+
+name = Summary
+description = Affiche un résumé de vos informations
+core = 7.x
+package = eco2ticket
+files[] = summary.module

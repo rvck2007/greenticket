@@ -1,0 +1,4 @@
+name = "eco2 ticket validation de numéro"
+description = Validation d'un numéro de ticket par un utilisateur du site
+core = 7.x
+package = eco2ticket

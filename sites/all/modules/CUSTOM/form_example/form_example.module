@@ -1,0 +1,104 @@
+<?php
+/* Ce hook_permission va être utilisé afin de permettre la soumission de notre formulaire */ 
+/** 
+ *Implements hook_permission()
+*/
+function form_example_permission(){
+	return array(
+		'submit form_example' => array(			// Création d'une permission
+			'title' => t('Submit form_example'),
+			'description' => t('Soumettre le formulaire form_example'),
+		),
+	);
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function form_example_menu() {
+	$items = array();
+	$items['form-example'] = array(
+		'title' => 'Validez votre ticket ici',		// Titre du formulaire, affiché tout en haut
+		'type' => MENU_NORMAL_ITEM,
+		'access arguments' => array('submit form_example'),	
+			// Il s'agit de la permission définie plus haut dans le hook form_example_permission
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('form_example_form'),
+	);
+
+	return $items;
+}
+
+/**
+ * Implement mon formulaire form_example
+ */
+function form_example_form($form, &$form_state) {
+	/* $form_state is a very important parameter,
+		because it's there where the values of your form will be stored, after you submit the form. */
+
+	$form['mynumber'] = array(
+		/* Le nom de ce composant de formulaire 'mynumber'
+			correspond au nom du champ de la table 'form_example' de la base de données 
+			auquel il fait référence. */
+		'#type' => 'textfield',
+		'#title' => t('My number'),		// Saissez ici votre numéro de ticket €co2 :
+		//'#size' => 10,
+		//'#maxlength' => 10,
+		'#required' => TRUE,
+		'#description' => t('Entrez un numéro €co2ticket valide svp'),
+	);
+
+	$form['mytextfield'] = array(
+		'#type' => 'textfield',
+		'#title' => t('My Textfield'),
+		'#description' => t('Entrez votre nom ou pseudo'),
+		'#size' => 60,
+		'#maxlength' => 128,
+		'#required' => TRUE,
+	);
+
+	$form['mytext'] = array(
+		'#type' => 'textarea',
+		'#title' => t('My Textarea'),
+		'#description' => t('Entrez un commentaire ou votre avis'),
+		'#default_value' => '',
+		'#required' => TRUE,
+	);
+
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Enregistrez le ticket'),
+	);
+
+	return $form;
+}
+
+/**
+ * Validation handler for the form form_example_form
+ */
+function form_example_form_validate($form, &$form_state) {
+	// print('<pre>'.print_r($form_state['values'],1).'</pre>');die();
+
+	if(!is_numeric($form_state['values']['mynumber'])) {
+		form_set_error('mynumber', t('Vous devez saisir un numéro valide'));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+/**
+ * Submit handler for the form_example_form. 
+ * Insert entry into the database.
+ */
+function form_example_form_submit($form, &$form_state) {
+	$fe_id = db_insert('form_example')
+		->fields(array(
+			'mynumber' => $form_state['values']['mynumber'],
+			'mytextfield' => $form_state['values']['mytextfield'],
+			'mytext' => $form_state['values']['mytext'],
+		))
+		->execute();
+
+	drupal_set_message(t('Vos données ont été ajoutés !'), 'status');
+}

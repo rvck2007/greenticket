@@ -1,0 +1,824 @@
+<?php
+
+global $user;
+
+global $num_ticket_selected;
+global $enseigne_ticket_selected;
+global $distance_ticket_selected;
+global $CO2_ticket_selected;
+global $montant_ticket_selected;
+
+/* Ce hook_permission va être utilisé afin de permettre la soumission du formulaire */
+/**
+ * Implements hook_permission()
+ */
+function ticket_validation_permission(){
+	return array(
+		'submit ticket_validation' => array(		// Création d'une permission
+			'title' => t('Submit ticket_validation'),
+			'decription' => t('Soumettre le formulaire ticket_validation'),
+		),
+		'submit ticket_entry' => array(		// Création d'une permission
+			'title' => t('Submit ticket_entry'),
+			'decription' => t('Soumettre le formulaire ticket_entry'),
+		),
+		'submit ticket_commande' => array(
+			'title' => t('Submit ticket_commande'),
+			'description' => t('Soumettre le formulaire de commande de tickets'),
+		),
+		'access ticket_validation submissions' => array(
+			'title' => t('Access ticket_validation submissions'),
+			'decription' => t('Access the ticket_validation submissions'),
+		),
+		'access ticket_validation tableselect' => array(
+			'title' => t('Access ticket_validation tableselect'),
+			'decription' => t('Access the ticket_validation tableselect'),
+		),
+		'access ticket_validation imprimer-bon' => array(
+			'title' => t('Access ticket_validation impression bon'),
+			'decription' => t('Access ticket_validation impression bon'),
+		),
+	);
+}
+
+/**
+ * Implements hook_menu().
+ */
+function ticket_validation_menu() {
+	$items = array();
+	$items['ticket_validation'] = array(
+		'title' => 'Validez votre ticket ici',		// Titre du formulaire, affiché tout en haut
+		'type' => MENU_NORMAL_ITEM,
+		'access arguments' => array('access content'),
+		// 'access arguments' => array('submit ticket_validation'),
+			// Il s'agit de la permission définie plus haut dans le hook 'submit ticket_validation'
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('ticket_validation_form'),
+	);
+	$items['ticket-entry'] = array(
+		'title' => 'Inscrire un nouveau ticket ici',		// Titre du formulaire, affiché tout en haut
+		'type' => MENU_NORMAL_ITEM,
+		//'access arguments' => array('Submit ticket_entry'),
+		'access arguments' => array('access content'),
+			// Il s'agit de la permission définie plus haut dans le hook 'submit ticket_entry'
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('ticket_entry_form'),
+	);
+	$items['ticket-commande'] = array(
+		'title' => 'Commande de tickets',		// Titre du formulaire, affiché tout en haut
+		'type' => MENU_NORMAL_ITEM,
+		'access arguments' => array('Submit ticket_commande'),
+			// Il s'agit de la permission définie plus haut dans le hook 'submit ticket_commande'
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('ticket_commande_form'),
+	);
+	$items['ticket-listing'] = array(
+		'title' => 'L\'historique de mes tickets',		// Titre du formulaire, affiché tout en haut
+		'type' => MENU_NORMAL_ITEM,
+		// 'access arguments' => array('access ticket_validation submissions'),
+			// Il s'agit de la permission définie plus haut dans le hook 'access ticket_validation submissions'
+		'access arguments' => array('access content'),
+		'page callback' => 'ticket_validation_submissions',
+	);
+	$items['ticket-tableselect'] = array(
+		'title' => 'L\'historique de mes tickets',		// Titre du formulaire, affiché tout en haut
+		'type' => MENU_NORMAL_ITEM,
+		// 'access arguments' => array('access ticket_validation tableselect'),
+			// Il s'agit de la permission définie plus haut dans le hook 'access ticket_validation submissions'
+		'access arguments' => array('access content'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('ticket_validation_form_table'),
+	);
+	
+	$items['imprimer-bon'] = array(
+		'title' => 'Imprimer votre bon',		// Titre du formulaire, affiché tout en haut
+		'type' => MENU_NORMAL_ITEM,
+		'access arguments' => array('access content'),
+		'page callback' => 'imprimer_mon_bon',
+	);
+	
+
+	return $items;
+}
+
+
+
+/**
+ * Implementation du formulaire ticket_validation
+ */
+function ticket_validation_form($form, &$form_state) {
+	/* $form_state is a very important parameter,
+		because it's there where the values of your form will be stored, after you submit the form. */
+
+	$form['num_ticket'] = array(
+		/* Le nom de ce composant de formulaire 'num_ticket'
+			correspond au nom du champ de la table 'ticket_valide' de la base de données 
+			auquel il fait référence. */
+		'#type' => 'textfield',
+		'#title' => t('Numéro €co2ticket'),		// Saissez ici votre numéro de ticket €co2 :
+		//'#size' => 10,
+		//'#maxlength' => 10,
+		'#required' => TRUE,
+		'#description' => t('Entrez un numéro €co2ticket valide svp'),
+	);
+	/*
+	$form['commentaire'] = array(
+		'#type' => 'textarea',
+		'#title' => t('Mon avis'),
+		'#description' => t('Entrez un commentaire ou votre avis'),
+		'#default_value' => '',
+		'#required' => TRUE,
+	);
+	*/
+
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Enregistrez le ticket'),
+	);
+
+	return $form;
+}
+
+/**
+ * Gestionnaire de validation du formulaire ticket_validation
+ */
+function ticket_validation_form_validate($form, &$form_state) {
+	// print('<pre>'.print_r($form_state['values'],1).'</pre>');die();
+
+	/*
+	if(!is_numeric($form_state['values']['num_ticket'])) {
+		form_set_error('num_ticket', t('Vous devez saisir un numéro valide'));
+		return FALSE;
+	}
+	return TRUE;
+	*/
+}
+
+/**
+ * Submit handler for the form_example_form. 
+ * Insert entry into the database.
+ */
+function ticket_validation_form_submit($form, &$form_state) {
+
+	global $user;
+	
+	$num_ticket_saisie = $form_state['values']['num_ticket'];
+
+	$query1 = 'SELECT numero_base FROM ticket_valide WHERE numero_base='.$num_ticket_saisie;
+	$result1 = db_query($query1);
+	$count1 = $result1->rowCount();
+
+	
+	$query2 = 'SELECT num_ticket FROM ticket WHERE num_ticket ='.$num_ticket_saisie;
+	$result2 = db_query($query2);
+	$count2 = $result2->rowCount();
+
+	
+	$query3 = 'SELECT * FROM ticket_valide WHERE numero_base ='.$num_ticket_saisie;
+	$result3 = db_query($query3);
+	$count3 = $result3->rowCount();
+
+	
+	if($count3 > 0) {
+		foreach($result3 as $row3) {
+			$date_creation = $row3->date_creation;
+			$date_creation_d = $row3->date_creation_D;
+			$nom_enseigne = $row3->nom_enseigne;
+			$km = $row3->km;
+			$montant_ttc = $row3->montant_ttc;
+			$disponibilite = $row3->disponibilite;
+		}
+	}
+	else{
+		form_set_error('num_ticket', t('Vous devez saisir un numéro valide'));
+		return FALSE;
+	}
+
+	
+	$query4 = 'SELECT * FROM utilisateurs WHERE useruid=' . $user->uid;
+	$result4 = db_query($query4);
+	$count4 = $result4->rowCount();
+
+	if($count4 > 0) {
+		foreach($result4 as $row4) {
+			$nom = $row4->nom;
+			$prenom = $row4->prenom;
+		}
+	}
+	
+
+
+	$date_enregistrement = time();
+	$date_enregistrement_d = date('Y/m/d', $date_enregistrement);
+
+	$date_validite = $date_enregistrement + 2*30*24*60*60; 
+		// La date de validité = date d'enregistrement + 2 mois.
+		// 2 mois en timestamp = 2 mois * 30 jours * 24 heures * 60 mn * 60 sec
+	$date_validite_d = date('Y/m/d', $date_validite);
+
+	$etat = 'Valide';
+	$utilisation ='Non utilisé';
+	$co2 = $km*171.2/1000;
+	$co2 = ceil($co2) . ' KgCO2';
+	$useruid = $user->uid;
+
+/*
+	dpm($num_ticket_saisie);
+	dpm('$count1: '.$count1);
+	dpm('$count2: '.$count2);
+	dpm('$count3: '.$count3);
+	dpm($date_creation);
+	dpm($nom_enseigne);
+	dpm($km);
+	dpm($montant_ttc);
+	dpm($disponibilite);
+	dpm($nom);
+	dpm($prenom);
+	dpm($date_enregistrement);
+	dpm($date_validite);
+	dpm($etat);
+	dpm($utilisation);
+	dpm($co2);
+	dpm($useruid);
+	
+*/
+
+	if($count2 > 0){
+		drupal_set_message(t('Ce numéro a déjà été utilisé.'), 'error');
+	}
+
+	if($count1 > 0 AND $count2 < 1 AND $disponibilite == 'disponible') {
+
+		$id_ticket = db_insert('ticket')
+			->fields(array(
+				'num_ticket' => $form_state['values']['num_ticket'],
+				'useruid' => $useruid,
+				'nom_enseigne' => $nom_enseigne,
+				'date_enregistrement' => $date_enregistrement,
+				'date_enregistrement_D' => $date_enregistrement_d,
+				'duree_validite' => $date_validite,
+				'duree_validite_D' => $date_validite_d,
+				'km' => $km,
+				'co2' => $co2,
+				'montant_ttc' => $montant_ttc,
+				'etat' => $etat,
+				'utilisation' => $utilisation,
+				'nom' => $nom,
+				'prenom' => $prenom,
+			))
+			->execute();
+
+		$lignes_modifiees = db_update('ticket_valide')
+							->fields(array(
+								'disponibilite' => 'indisponible',
+								'date_utilisation' => $date_enregistrement,
+								'date_utilisation_D' => $date_enregistrement_d,
+							))
+							->condition('numero_base', $num_ticket_saisie)
+							->execute();
+
+		drupal_set_message(t('Vos données ont été ajoutés !'), 'status');
+	}
+	else {
+		drupal_set_message(t('Veuillez saisir un numéro valide !'), 'error');
+	}
+
+}
+
+
+
+/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+/*      TABLEAU/LISTING DE TICKETS HISTORIQUE (SANS CASE DE SELECTION)       */
+/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+
+/**
+ * Visualiser l'historique des tickets d'un utilisateur
+ */
+function ticket_validation_submissions() {
+	global $user;
+
+	$query5 = 'SELECT * FROM ticket WHERE useruid=' . $user->uid;
+	$result5 = db_query($query5);
+	$count5 = $result5->rowCount();
+
+	$header = array(t('Ticket'), t('Enseigne'), t('Km'), t('CO2 économisé'), t('Valeur ttc'), t('Date d\'enregistrement'), t('Date de validité'), t('Etat'), t('Utilisation'), t('Date d\'utilisation'));
+
+	$rows = array();
+
+	foreach($result5 as $result) {
+		$rows[] = array(
+			$result->num_ticket,
+			$result->nom_enseigne,
+			$result->km,
+			$result->co2,
+			$result->montant_ttc,
+			$result->date_enregistrement_D,
+			$result->duree_validite_D,
+			$result->etat,
+			$result->utilisation,
+			$result->date_utilisation_D,
+		);
+	}
+
+	return theme('table', array('header' => $header, 'rows' => $rows));
+
+}
+
+
+
+/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+/*              TABLEAU/LISTING DE TICKETS (AVEC CASE DE SELECTIONS)         */
+/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+
+
+function ticket_validation_form_table($form, &$form_state) {
+	global $user;
+
+	$query5 = 'SELECT * FROM ticket WHERE useruid=' . $user->uid;
+	$result5 = db_query($query5);
+	$count5 = $result5->rowCount();
+
+	$header = array(t('Ticket'), t('Enseigne'), t('Km'), t('CO2 économisé'), t('Valeur ttc'), t('Date d\'enregistrement'), t('Date de validité'), t('Etat'), t('Utilisation'), t('Date d\'utilisation'));
+
+	$rows = array();
+
+	foreach($result5 as $result) {
+		$rows[] = array(
+			$result->num_ticket,
+			$result->nom_enseigne,
+			$result->km,
+			$result->co2,
+			$result->montant_ttc,
+			$result->date_enregistrement_D,
+			$result->duree_validite_D,
+			$result->etat,
+			$result->utilisation,
+			$result->date_utilisation_D,
+		);
+	}
+
+	$form['table'] = array(
+		'#type' => 'tableselect',
+		'#header' => $header,
+		'#options' => $rows,
+		'#empty' => t('Aucun ticket enregistré'),
+		'#multiple' => FALSE,
+	);
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Imprimez un ticket'),
+	);
+	/*
+	$form['submit2'] = array(
+		'#type' => 'submit',
+		'#value' => t('Faire du covoiturage'),
+	);
+	*/
+	return $form;
+
+}
+
+
+function ticket_validation_form_table_submit($form, &$form_state) {
+	global $user;
+
+	
+	global $num_ticket_selected;
+	global $enseigne_ticket_selected;
+	global $distance_ticket_selected;
+	global $CO2_ticket_selected;
+	global $montant_ticket_selected;
+	
+
+	$num_ticket_selected = "";
+	$enseigne_ticket_selected = "";
+	$distance_ticket_selected = "";
+	$CO2_ticket_selected = "";
+	$montant_ticket_selected = "";
+		
+
+	$results = $form_state['values']['table'];
+	// drupal_set_message('<pre>'.print_r($form_state['values'], 1). '</pre>');
+	$selector = $form_state['values']['table'];
+	drupal_set_message('<pre>'.$selector. '</pre>');
+	// drupal_set_message('<pre>'.print_r($form_state['values']['table'],1). '</pre>');
+	// drupal_set_message('<pre>'.$form_state['values']['table']. '</pre>');
+
+	/* $maval = return drupal_set_message('<pre>'.print_r($form_state['values']['table'], 1). '</pre>'); */
+	/* drupal_set_message('<pre>'.print_r($maval). '</pre>'); */
+	/* var_dump($results); */
+
+	
+	$query10 = 'SELECT * FROM ticket WHERE useruid=' . $user->uid;
+	$result10 = db_query($query10);
+	$count10 = $result10->rowCount();
+
+	$ligne = array();
+
+	foreach($result10 as $result) {
+		$ligne[] = array(
+			$result->num_ticket,
+			$result->nom_enseigne,
+			$result->km,
+			$result->co2,
+			$result->montant_ttc,
+			$result->date_enregistrement_D,
+			$result->duree_validite_D,
+			$result->etat,
+			$result->utilisation,
+			$result->date_utilisation_D,
+		);
+	}
+	//$selector++;
+	// drupal_set_message('<pre>'.print_r($count10). '</pre>');
+
+
+
+	// TRES BON DEBOGGEUR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// ...................................................................................
+	/*
+	dpm($count10);
+	dpm($ligne[$selector][0]);
+	dpm($ligne[$selector][1]);
+	dpm($ligne[$selector][2]);
+	dpm($ligne[$selector][3]);
+	dpm($ligne[$selector][4]);
+	*/
+
+	$num_ticket_selected = $ligne[$selector][0];
+	$enseigne_ticket_selected = $ligne[$selector][1];
+	$distance_ticket_selected = $ligne[$selector][2]." km";
+	$CO2_ticket_selected = $ligne[$selector][3];
+	$montant_ticket_selected = $ligne[$selector][4]." € TTC";
+
+
+	// TRES BON DEBOGGEUR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// ...................................................................................
+	/*
+	dpm($num_ticket_selected);
+	dpm($enseigne_ticket_selected);
+	dpm($distance_ticket_selected);
+	dpm($CO2_ticket_selected);
+	dpm($montant_ticket_selected);
+	*/
+
+	variable_set('var_num_ticket_selected', $num_ticket_selected);
+	variable_set('var_enseigne_ticket_selected', $enseigne_ticket_selected);
+	variable_set('var_distance_ticket_selected', $distance_ticket_selected);
+	variable_set('var_CO2_ticket_selected', $CO2_ticket_selected);
+	variable_set('var_montant_ticket_selected', $montant_ticket_selected);
+
+	// $form_state['redirect'] = "http://www.google.fr";
+	// $form_state['redirect'] = "summary";
+	//$form_state['redirect'] = "node/7";
+	$form_state['redirect'] =  "imprimer-bon";
+
+}
+
+
+/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+/*              ENREGISTREMENT D'UN TICKET DANS LA BASE DE DONNEES           */
+/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+
+
+
+function ticket_entry_form($form, &$form_state) {
+
+	$form['num_ticket2'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Numéro €co2ticket'),	
+		'#required' => TRUE,
+		'#description' => t('Inscrire un nouveau numéro €co2ticket dans la Base de données'),
+	);
+
+	$form['nom_enseigne'] = array(
+		'#type' => 'select',
+		'#title' => t('Enseigne'),		
+		'#options' => drupal_map_assoc(array(
+								t('IKEA'), 
+								t('E. LECLERC'), 
+								t('CARREFOUR'), 
+								t('AUCHAN'), 
+								t('DECATHLON'), 
+								t('CASINO'))),
+		'#required' => TRUE,
+		'#description' => t('Choisir le nom de l\'enseigne svp'),
+	);
+
+	$form['km'] = array(
+		'#type' => 'select',
+		'#title' => t('Kilométrage'),
+		'#options' => drupal_map_assoc(array(
+								t('5'), 
+								t('10'),
+								t('15'))),
+		'#required' => TRUE,
+		'#description' => t('Entrez le nombre de kilomètre de covoiturage autorisé par ce ticket'),
+	);
+
+	$form['submit2'] = array(
+		'#type' => 'submit',
+		'#value' => t('Inscrire le ticket'),
+	);
+
+	return $form;
+}
+
+function ticket_entry_form_validate($form, &$form_state) {
+	// print('<pre>'.print_r($form_state['values'],1).'</pre>');die();
+
+	/*
+	if(!is_numeric($form_state['values']['num_ticket2'])) {
+		form_set_error('num_ticket2', t('Vous devez saisir un numéro valide !'));
+		return FALSE;
+	}
+	*/
+	if(!is_numeric($form_state['values']['km'])) {
+		form_set_error('km', t('Vous devez saisir un nombre entier !'));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+function ticket_entry_form_submit($form, &$form_state) {
+
+	global $user;
+
+	$num_ticket_saisie2 = $form_state['values']['num_ticket2'];
+
+	$nom_enseigne = $form_state['values']['nom_enseigne'];
+
+	$km = $form_state['values']['km'];
+
+	switch($km) {
+		case '5':
+			$montant_ttc = 2;
+			break;
+		case '10':
+			$montant_ttc = 2;
+			break;
+		case '15':
+			$montant_ttc = 2;
+			break;
+	}
+
+	$date_creation = time();
+	$date_creation_d = date('Y/m/d', $date_creation);
+
+	$disponibilite = 'disponible';
+
+
+	if(isset($num_ticket_saisie2) AND (isset($nom_enseigne)) AND (isset($km))) {
+
+		$idticket_valide = db_insert('ticket_valide')
+				->fields(array(
+					'numero_base' => $num_ticket_saisie2,
+					'date_creation' => $date_creation,
+					'date_creation_D' => $date_creation_d,
+					'nom_enseigne' => $nom_enseigne,
+					'km' => $km,
+					'montant_ttc' => $montant_ttc,
+					'disponibilite' => $disponibilite,
+				))
+				->execute();
+
+			drupal_set_message(t('Le ticket est bien enregistré dans la Base de données !'), 'status');
+	}
+	else {
+		drupal_set_message(t('Veuillez renseigner tous les champs avec des données valides svp !'), 'error');
+	}
+
+}
+
+
+
+
+/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+/*        COMMANDE & GENERATION  DE NOUVEAUX TICKETS DANS LA BASE DE DONNEES         */
+/* @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ */
+
+
+/**
+ * Implementation du formulaire ticket_commande
+ */
+function ticket_commande_form($form, &$form_state) {
+
+	$form['nom_enseigne'] = array(
+		'#type' => 'select',
+		'#title' => t('Enseigne'),		// Saissez ici votre numéro de ticket €co2 :
+		'#options' => drupal_map_assoc(array(
+					t('IKEA'),
+					t('E. LECLERC'),
+					t('CARREFOUR'),
+					t('AUCHAN'),
+					t('DECATHLON'),
+					t('CASINO'))),
+		'#required' => TRUE,
+		'#description' => t('Choisisr le nom de l\'enseigne svp'),
+	);
+
+	$form['nbre_tickets'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Nombre de tickets commandés'),
+		'#required' => TRUE,
+		'#description' => t('Inscrire le nombre de tickets uniques à générer.<br>Le nombre maximum de tickets est limité à 500 tickets par demande.'),
+	);
+
+	$form['km'] = array(
+		'#type' => 'select',
+		'#title' => t('kilométrage'),
+		'#options' => drupal_map_assoc(array(
+					t('10'),
+					t('20'),
+					t('30'))),
+		'#required' => TRUE,
+		'#description' => t('Entrez le nombre de kilomètres de covoiturage des tickets.'),
+	);
+
+	$form['submit3'] = array(
+		'#type' => 'submit',
+		'#value' => t('Générer les tickets'),
+	);
+
+	return $form;
+}
+
+
+function ticket_commande_form_validate($form, &$form_state) {
+	// print('<pre>'.print_r($form_state['values'],1).'</pre>');die();
+
+	if(!is_numeric($form_state['values']['nbre_tickets'])) {
+		form_set_error('nbre_tickets', t('Vous devez saisir un nombre entier !'));
+		return FALSE;
+	}
+	if($form_state['values']['nbre_tickets'] > 1000) {
+		form_set_error('nbre_tickets', t('Vous devez saisir une quantité inférieure à 1000 !'));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+function ticket_commande_form_submit($form, &$form_state) {
+
+	global $user;
+
+	$nbre_tickets = $form_state['values']['nbre_tickets'];
+	$nom_enseigne = $form_state['values']['nom_enseigne'];
+	$km = $form_state['values']['km'];
+
+	switch($km) {
+		case '10':
+			$montant_ttc = 0.5;
+			break;
+
+		case '20':
+			$montant_ttc = 1;
+			break;
+
+		case '30':
+			$montant_ttc = 1.5;
+			break;
+	}
+
+	$date_creation = time();
+	
+	$date_creation_d = date('Y/m/d', $date_creation);
+
+	$disponibilite = 'disponible';
+
+
+	if(isset($nbre_tickets) AND isset($nom_enseigne) AND isset($km)) {
+
+		$query6 = 'SELECT MAX(numero_base) as num FROM ticket_valide';
+
+		$result6 = db_query($query6);
+
+		$count6 = $result6->rowCount();
+
+		if($count6 > 0) {
+			foreach($result6 as $row6) {
+				$last_val = $row6->num;
+			}
+		}
+		if($count6 == 0) {
+			$last_val = rand(1000,10000); 
+			/* Si la base de données est vide, l'application va générer un premier buméro de base
+				qui sera un nombre aléatoire compris entre 1000 et 10000 */
+		}
+
+		$alea = '';
+		$val1 = '';
+		$val2 = '';
+		$i = '';
+
+		$alea = rand(2,1000);
+
+		for($i=1; $i<=$nbre_tickets ; $i++) {
+
+			$val1 = $last_val + $alea;
+			$val2 = hash('crc32b', $val1);
+			$val1 = $val1 + rand(2,1000);
+			$last_val = $val1;
+
+			$idticket_valide = db_insert('ticket_valide')
+					->fields(array(
+						'numero_base' => $val1,
+						'num_ticket' => $val2,
+						'date_creation' => $date_creation,
+						'date_creation_D' => $date_creation_d,
+						'nom_enseigne' => $nom_enseigne,
+						'km' => $km,
+						'montant_ttc' => $montant_ttc,
+						'disponibilite' => $disponibilite,
+					))
+					->execute();
+		}
+		if($nbre_tickets == 1) {
+			drupal_set_message(t('Le ticket a bien été généré et enregistré dans la base de données'), 'status');
+		}
+		if($nbre_tickets > 1) {
+			drupal_set_message(t('La liste de tickets a bien été générée et enregistrée dans la base de données'), 'status');
+		}
+
+	}
+	else {
+			drupal_set_message(t('Veuillez renseigner tous les champs avec des données valides svp !'), 'error');
+		}
+}
+
+
+
+
+
+
+
+
+function imprimer_mon_bon() {
+	global $user;
+	/*
+	global $num_ticket_selected;
+	global $enseigne_ticket_selected;
+	global $distance_ticket_selected;
+	global $CO2_ticket_selected;
+	global $montant_ticket_selected;
+	*/
+
+	$query4 = 'SELECT * FROM utilisateurs WHERE useruid=' . $user->uid;
+	$result4 = db_query($query4);
+	$count4 = $result4->rowCount();
+
+	if($count4 > 0) {
+		foreach($result4 as $row4) {
+			$nom = $row4->nom;
+			$prenom = $row4->prenom;
+		}
+	}
+
+	$var_num = variable_get('var_num_ticket_selected');
+	$var_enseigne = variable_get('var_enseigne_ticket_selected');
+	$var_distance = variable_get('var_distance_ticket_selected');
+	$var_CO2 = variable_get('var_CO2_ticket_selected');
+	$var_montant = variable_get('var_montant_ticket_selected');
+
+
+	return '<div class="ticket_wrapper">'
+			.'<img class="logo-ticket" src="/eco2ticket/sites/all/themes/omegaeco2ticket/images/top-logo-eco2ticket.png" />'
+
+			.'<div class="ticket_bloc_1">'
+			.'<p class="ticket_p">'
+			.'Expire le' . '<br>'
+			.'Ticket N°'.$var_num.'<br>'
+			.'Valeur : ' . $var_montant . '<br>'
+			.'NOM: '.$nom . '<br>'
+			.'PRENOM: '.$prenom . '<br>'
+			.'</div>'
+
+			.'<div class="ticket_co2">'
+			.'-'.$var_CO2 . '<br><br>'
+			.'</div>'
+
+			.'<div class="ticket_bloc_2>'
+			.'<p class="ticket_km">'. $var_distance . '</p>'
+			.'</div>'
+			.'<div class="ticket_bloc_3>'
+			.'<p class="url-site">'
+			.'<span class="url-site-1">www.</span>'
+			.'<span class="url-site-2">eco2tciket</span>'
+			.'<span class="url-site-1">.fr</span>'
+			.'</p>'
+			.'</div>'
+			.'</div>';
+
+/*
+			variable_set($var_num_ticket_selected, $num_ticket_selected);
+	variable_set($var_enseigne_ticket_selected, $enseigne_ticket_selected);
+	variable_set($var_distance_ticket_selected, $distance_ticket_selected);
+	variable_set($var_CO2_ticket_selected, $CO2_ticket_selected);
+	variable_set($var_montant_ticket_selected, $montant_ticket_selected); */
+
+}
+
+
+
+

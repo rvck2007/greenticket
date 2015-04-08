@@ -1,0 +1,60 @@
+// Import external libraries.
+@import "compass";
+@import "breakpoint";
+@import "singularitygs";
+
+
+@import "../../variables/grid";
+
+
+body  {
+	// correspond au fond en pointillés verts de la page
+	background-image: url("/sites/all/themes/omegaeco2ticket/images/fond-pointillet.png");
+	background-repeat: repeat;
+	background-position: 100% 100%;
+}
+
+
+.l-page{
+	margin:0 auto;
+	@include breakpoint($tab, true){
+		width: $tab;
+	}
+	@include breakpoint($desk, true){
+		width: $desk;
+	}
+
+}
+
+.l-main{
+	@include clearfix;
+}
+
+@include breakpoint($tab, true){
+	.l-content {
+		@include grid-span(12,1);
+	}
+}
+
+
+@include breakpoint($desk, true) {
+	.l-content {
+		@include grid-span(12,1);
+	}
+}
+
+.l-content {
+
+}
+
+
+.logo-notre-histoire {
+	float:right;
+	margin-left: 30px;
+}
+
+
+.l-main {
+	background: #FFF;
+	min-height: 300px;
+}

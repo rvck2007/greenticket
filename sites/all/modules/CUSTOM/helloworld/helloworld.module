@@ -1,0 +1,104 @@
+<?php
+/**
+* @file
+* Affiche le formulaire de saisie du numero de ticket
+*/
+
+/**
+* Implementation of hook_permission()
+*/
+function helloworld_permission(){
+	return array(
+		'access helloworld' => array('title' => t('Access helloworld'))
+	);
+}
+
+/**
+* Implementaiton of hook_menu().
+*/
+function helloworld_menu() {
+	$items = array();
+
+	$items['helloworld/sayhelloworld'] = array(
+		'title' => 'Bienvenue à €co2ticket',
+		'page callback' => 'say_hello_world',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+		);
+
+	$items['helloworld/formulaire'] = array(
+		'title' => 'Formulaire de saisie du numéro de ticket',
+		'page callback' => 'hello_world_myform',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+		);
+
+	return $items;
+}
+
+function say_hello_world() {
+	$vars = "Bienvenue dans l'application €co2ticket !";
+	return '<p class="bienvenue">'. $vars . '</p>';
+}
+
+function hello_world_myform() {
+	$content = drupal_get_form('hello_world_form');
+	return $content;
+}
+
+function hello_world_form() {
+	$form['ticket_eco2'] = array(
+		'#title' => 'Saissez ici votre numéro de ticket €co2 :',
+		'#type' => 'textfield',
+		);
+
+	$form['valider'] = array(
+		'#type' => 'submit',
+		'#value' => t('enregistrez le ticket'),
+		);
+
+	$form['print'] = array(
+		'#type' => 'submit',
+		'#value' => t('Imprimer le ticket'),
+		);
+
+	return $form;
+}
+
+function hello_world_form_submit($form, &$form_state) {
+	dpm($form_state['values']['ticket_eco2']);
+}
+
+
+/**
+* Inclure les informations sur le block "hello-block" dans la page d'administration des blocs.
+*/
+function helloworld_block_info() {
+	$block['hello-block'] = array(
+		'info' => 'Hello world !', // C'est le texte qui apparait dans la page de gestion des blocs
+		);
+	return $block;
+}
+
+
+/**
+* Rendre visible le block dans une région
+*/
+function helloworld_block_view($delta = ''){
+	$block = array(
+		'subject' => 'Saisie de ticket :',
+		'content' => '<p class="little-font-1">Merci de votre visite sur €co2ticket !</p>'
+		);
+	return $block;
+}
+
+
+/**
+* Implémentation du hook_help()
+*/
+function helloworld_help($path, $arg) {
+	switch ($path) {
+		case 'admin/help#helloworld':
+			return '<p>'. t("Aide à l'utilisation d'eco2ticket"). '</p>';
+	}
+}

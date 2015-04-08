@@ -1,0 +1,126 @@
+<?php
+
+/**
+ * Implements hook_menu()
+ */
+function flag_application_menu() {
+  $items['admin/structure/flags/flag_application'] = array(
+
+    'title' => 'Flag Applications',	// c'est le titre du menu (NON TRADUIT !)
+
+    'description' => 'Find and manage flag applications.', // c'est la description NON TRADUITE du menu
+
+    'page callback' => 'drupal_get_form',	// c'est la fonction à appeler pour afficher une page web lorsque l'utilisateur visite le Path. En cas d'omission, la fonction-callback du menu parent sera utilisée
+
+    'page arguments' => array('flag_application_form'), // c'est un tableau d'arguments à passer à la fonction de Callback, avec des éléments de substitution du Path.
+
+    'access callback' => TRUE, //'flag_application_permission', // C'est une fonction renvoyant TRUE si l'utilisateur a des droits d'accès à ce menu, et FALSE sinon.
+
+    // 'access arguments' => array('access content'), // C'est un tableau d'arguments passé a l'access callback
+
+    // 'weight' => 0,	// C'est la position que prendrait la fonctionnalité "Flag Application" dans un menu
+
+    'file' => 'flag_application.admin.inc',
+    /* Il s'agit d'un fichier qui sera inclus avant que la fonction Callback ne soit appelée.
+    	Cela permet de déclarer des fonctions de Callback dans des fichiers séparés.
+    	Le chemin est une valeur relative à partir du répertoire d'implémentation du module.
+    */
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission()
+ */
+
+
+
+
+
+/**
+ * Implements hook_flag_flag
+ */
+
+function flag_application_flag_flag($flag, $entity_id, $account, $flagging) {
+	dsm($flagging);		
+	// this is the Instance of the flag. 
+	// When the user clicked "Flag this node", then this is what was created ! 
+	// it corresponds to the 'flagging_id' of the table 'flagging'
+
+	if ($flag->name == 'flag_application') {
+		// insertion de données dans la table 'flag_application' :
+		$nid = db_insert('flag_application')
+			->fields(array(
+				'flagging_id' => $flagging->flagging_id, // champ1
+				'status' => 0,	// champ2
+				))
+			->execute();
+	}
+}
+/*
+@paramètres :
+--------------------
+- $flag : the flag object ;
+- $entity_id : the id of the entity the flag is on (ex : a node,…)
+- $account : the user account performing the action
+- $flagging_id : the flagging entity
+*/
+
+
+/**
+ * Implements hook_flag_unflag
+ */
+
+function flag_application_flag_unflag($flag, $entity_id, $account, $flagging) {
+
+	if ($flag->name == 'flag_application') {
+		// suppression de l'élément dans la table 'flag_application' :
+		$deleted = db_delete('flag_application')
+			->condition('flagging_id', $flagging->flagging_id)
+			->execute();
+	}
+}
+
+
+/**
+ * Implements hook_flag_default_flags
+ */
+function flag_application_flag_default_flags() {
+
+	$flags = array();
+
+	// Exported flag: "Flag Application".
+	$flags['flag_application'] = array (
+	  'entity_type' => 'node',
+	  'title' => 'Flag Application',
+	  'global' => '0',
+	  'types' => 
+	  array (
+	  ),
+	  'flag_short' => 'Flag this item',
+	  'flag_long' => 'Apply for this',
+	  'flag_message' => 'Thanks for applying',
+	  'unflag_short' => 'Remove your application',
+	  'unflag_long' => 'Remove your application for this from the site',
+	  'unflag_message' => 'Your application has been removed',
+	  'unflag_denied_text' => '',
+	  'link_type' => 'toggle',
+	  'weight' => 0,
+	  'show_in_links' => 
+	  array (
+	    'full' => 'full',
+	    'teaser' => 'teaser',
+	    'rss' => 0,
+	    'search_index' => 0,
+	    'search_result' => 0,
+	  ),
+	  'show_as_field' => 0,
+	  'show_on_form' => 0,
+	  'access_author' => '',
+	  'show_contextual_link' => 0,
+	  'i18n' => 0,
+	  'api_version' => 3,
+	);
+	return $flags;
+
+}

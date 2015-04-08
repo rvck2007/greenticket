@@ -1,0 +1,5 @@
+name = "Form Example"
+description = "Un exemple de formulaire interragissant avec une table de base de données"
+core = "7.x"
+vesion = "7.x-1.0"
+package = "eco2ticket"

@@ -1,0 +1,46 @@
+/* 1/30 */
+/* No files to import found in abstractions/**\/* */
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/base\/_media\.scss}line{font-family:\000031}}
+img, media {
+  max-width: 100%; }
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/omegaeco2ticket\.styles\.scss}line{font-family:\0000324}}
+.pane-page-logo {
+  min-height: 60px; }
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/omegaeco2ticket\.styles\.scss}line{font-family:\0000328}}
+.nav-bar-01 {
+  min-height: 40px; }
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/omegaeco2ticket\.styles\.scss}line{font-family:\0000333}}
+.nav-bar-01 ul li {
+  display: inline; }
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/omegaeco2ticket\.styles\.scss}line{font-family:\0000336}}
+.nav-bar-01 a {
+  text-decoration: none;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 6px 10px; }
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/omegaeco2ticket\.styles\.scss}line{font-family:\0000344}}
+.nav-bar-01 a:hover {
+  background-color: #096826; }
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/omegaeco2ticket\.styles\.scss}line{font-family:\0000356}}
+.pane-title {
+  visibility: hidden;
+  margin: 0;
+  height: 0; }
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/omegaeco2ticket\.styles\.scss}line{font-family:\0000362}}
+.l-header {
+  background-color: black; }
+
+/*
+hr {
+	-webkit-margin-before: 0;
+    -webkit-margin-after: 0;	
+    -webkit-margin-start: 0;
+    -webkit-margin-end: 0;
+}
+*/

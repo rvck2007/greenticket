@@ -1,0 +1,11 @@
+name = helloworld
+description = test for module creation
+package = eco2ticket
+version = VERSION
+core = 7.x
+files[] = helloworld.module
+
+; Information added by drupal.org packaging script on 2014-09-19
+version = "1.0"
+project = "drupal"
+datestamp = "1269192313"

@@ -1,0 +1,49 @@
+/* 1/30 */
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000310}}
+body {
+  background-image: url("/sites/all/themes/omegaeco2ticket/images/fond-pointillet.png");
+  background-repeat: repeat;
+  background-position: 100% 100%; }
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000318}}
+.l-page {
+  margin: 0 auto; }
+  @media (min-width: 1024px) {
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000318}}
+    .l-page {
+      width: 1024px; } }
+  @media (min-width: 70em) {
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000318}}
+    .l-page {
+      width: 70em; } }
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000329}}
+.l-main {
+  overflow: hidden;
+  *zoom: 1; }
+
+@media (min-width: 1024px) {
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000334}}
+  .l-content {
+    width: 100%;
+    float: right;
+    margin-left: 0;
+    margin-right: 0;
+    clear: none; } }
+@media (min-width: 70em) {
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000341}}
+  .l-content {
+    width: 100%;
+    float: right;
+    margin-left: 0;
+    margin-right: 0;
+    clear: none; } }
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000351}}
+.logo-notre-histoire {
+  float: right;
+  margin-left: 30px; }
+
+@media -sass-debug-info{filename{font-family:file\:\/\/\/var\/www\/html\/eco2ticket\/sites\/all\/themes\/omegaeco2ticket\/sass\/layouts\/home\/home\.layout\.scss}line{font-family:\0000357}}
+.l-main {
+  background: #FFF;
+  min-height: 300px; }

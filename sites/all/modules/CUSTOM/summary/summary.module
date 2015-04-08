@@ -1,0 +1,214 @@
+<?php
+/*
+ * @file
+ * Affiche un résumé de vos informations
+ */
+
+/**
+ * Implémentation du hook_help()
+ */
+function summary_help($path, $arg) {
+	switch($path) {
+		case 'admin/help#summary':
+			return '<p>' . t("Cette page donne un résumé des informations de votre compte"). '</p>';
+	}
+}
+
+
+
+
+
+
+/**
+ * Implémentation du hook_menu
+ */
+function summary_menu() {
+	$items['summary'] = array(
+		// 'title' => t('Ma page perso'),
+		'access arguments' => array('access content'),	// => ici, tout le monde a le droit d'accès à cette page
+		'type' => MENU_CALLBACK,
+		'page callback' => 'summary_content',
+		);
+
+	$items['admin/config/system/summary'] = array(
+		'title' => t('Paramétrage du compte'),
+		'description' => t('Paramétrage des informations de compte'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('summary_admin_settings'),
+		'access arguments' => array('administer site configuration'),
+		'type' => MENU_NORMAL_ITEM,
+		);
+	return $items;
+}
+
+/**
+ * Contenu de la page de résumé du compte
+ */
+function summary_content() {
+	global $user;
+
+	$query = 'SELECT type, count(*) AS count FROM {node} GROUP BY type';
+
+	$query2 = 'SELECT useruid, nom, prenom, fonction FROM utilisateurs WHERE useruid='. $user->uid;
+
+	$result = db_query($query)->fetchAllAssoc('type');
+
+	$result2 = db_query($query2)->fetchAllAssoc('useruid');
+
+	$summary_node_count_type = '';
+
+	$person = '';
+
+	$identite = '';
+
+	foreach($result as $row) {
+		$summary_node_count_type .= $row->type . ' : ' . $row->count . '<br>';
+	}
+
+	foreach($result2 as $row2) {
+		$person .= 	'Nom : ' . $row2->nom . '<br>' .
+					'Prenom : ' . $row2->prenom . '<br>' .
+					'Fonction : ' . $row2->fonction . '<br>';
+
+		$identite .= $row2->nom . ' ' . $row2->prenom ;
+	}
+
+
+	$summary_node_count = t('<h4>Nombre de pages créées sur le site par type:</h4>') . $summary_node_count_type;
+
+	$person_display = t('<h3>Détails infos compte : </h3>') . $person;
+
+	$display = variable_get('summary_display', array()) ;
+
+	$output = '';
+
+	/*
+		if($display['module'])
+			$output .= $summary_module_list;
+
+		if($display['vocabulary'])
+			$soutput .= $summary_vocabulary_list;
+
+		if(array_key_exists('content_type', $display) && $display['content_type'])
+			$output .= $summary_node_types_list;
+
+	*/
+		$output .= $person_display;
+
+		//$output .= $summary_node_count;
+
+	
+	return '<p class="bienvenue">Bienvenue dans votre page perso M. ' . $identite . '</p><hr>' .
+			'<p class="font-size-14-bold">Profil<hr></p>'.
+			'<p class="font-size-14"><span class="bold">Pseudo : </span>'. $user->name . '<br>' .
+			'<span class="bold">email : </span>' .
+			$user->mail . '</p><br>' .
+
+			'
+			<input type="button" class="bouton-1" value="Modifier mon profil" onclick="";>
+			<br><br>
+		    <a href="?q=ticket_validation"><input type="button" class="bouton-1" value="Enregistrer un ticket"/></a>
+		    <br><br>
+			<a href="?q=ticket-tableselect"><input type="button" class="bouton-1" value="Consulter l\'historique de mon compte"></a>
+			<br><br>
+			' .
+			$output
+			;
+
+}
+
+/**
+ * Définition du formulaire administratif
+ */
+function summary_admin_settings(){
+	$form['checkbox_visible'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Section visibility'),
+		'#description' => t('Sélection des éléments à afficher'),
+		'#collapsible' => TRUE,
+		'#collapsed' => TRUE,
+	);
+
+			$form['checkbox_visible']['summary_display'] = array(
+				'#type' => 'checkboxes',
+				'#title' => t('Choix des éléments à afficher'),
+				'#description' => t('Choisir les sections à montrer dans la page d\'informations'),
+				'#options' => array(
+					'module' => t('Module list'), 
+					'vocabulary' => t('Vocabulary list'), 
+					'content-type' => t('Content types')
+				),
+				'#default_value' => variable_get('summary_display', array('module','vocabulary')),
+			);
+
+	$form['labels'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Libellé des sections'),
+		'#description' => t('Change les libellés des sections à afficher'),
+		'#collapsible' => TRUE,
+		'#collapsed' => TRUE,
+	);
+
+			$form['labels']['summary_module_label'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Libellé de la section Module'),
+				'#description' => t('Change le libellé de la section module'),
+				'#default_value' => variable_get('summary_module_label','Activated modules'),
+			);
+
+			$form['labels']['summary_taxonomy_label'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Libellé de la section Taxonomy'),
+				'#description' => t('Change le libellé de la section Taxonomy'),
+				'#default_value' => variable_get('summary_module_label','Taxonomy vocabularies'),
+			);
+
+			$form['labels']['summary_content_types'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Libellé du module Content types'),
+				'#description' => t('Change le libellé de la section Content-types'),
+				'#default_value' => variable_get('summary_content_types','Content types'),
+			);
+	/* Affichage des données de la variable $conf dans un tableau, grace au module Devel.
+		La variable $conf enregistre dans un tableau toutes les variables globales.
+
+			global $conf;
+			dpm($conf);
+	*/
+	global $conf;
+	dpm($conf);
+
+	return system_settings_form($form);
+}
+
+
+/*
+function summary_form(){
+	$form['bouton-1'] = array(
+		'#type' => 'submit',
+		'#value' => t('Modifier mon profil'),
+		);
+
+	$form['bouton-2'] = array(
+		'#type' => 'submit',
+		'#value' => t('Enregistrer un ticket'),
+		);
+
+	$form['bouton-3'] = array(
+		'#type' => 'submit',
+		'#value' => t('Consulter mon compte'),
+		);
+
+	return $form;
+}
+*/
+
+/* 
+Implementing hook_user_insert
+
+function summary_user_insert(&$edit, $account, $category) {
+	db_insert('utilisateurs')->fields(array(
+		))
+}
+
+ */
